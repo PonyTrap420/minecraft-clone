@@ -12,22 +12,6 @@ A basic Minecraft-style clone written in C using [GLFW](https://www.glfw.org/) f
 
 ---
 
-## 📁 Project Structure
-
-├── bin/ # Compiled executables
-├── build/ # CMake build output
-├── lib/ # External libraries (as submodules)
-│ └── glfw/ # GLFW library
-├── res/ # Resources (textures, models, etc.)
-├── src/
-│ ├── include/ # Header files
-│ └── main.c # Main entry point
-├── CMakeLists.txt # Build configuration
-├── .gitmodules # Git submodule definitions
-└── README.md
-
----
-
 ## 🚀 Build & Run
 
 ### First time setup:
