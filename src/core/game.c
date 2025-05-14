@@ -1,6 +1,4 @@
 #include "game.h"
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <cglm/cglm.h>
@@ -9,35 +7,21 @@
 #include "../gfx/shader.h"
 #include "../gfx/index_buffer.h"
 
-void calc_fps(int* frameCount, double* previousTime);
-
-int start_game()
+int init(Game* self)
 {
-    if (!glfwInit()) {
-        fprintf(stderr, "Failed to initialize GLFW\n");
-        return -1;
-    }
-
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Minecraft Clone", NULL, NULL);
-    if (!window) {
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(self->window);
 
     glfwSwapInterval(1);
 
-   if (glewInit() != GLEW_OK)
+    if (glewInit() != GLEW_OK)
     {
+        fprintf(stderr, "Failed to initialize GLEW\n");
         return -1;
     }
+
     printf("%s\n", (const char*)glGetString(GL_VERSION));
-    
-    double previousTime = glfwGetTime();
-    int frameCount = 0;
-    
- 	Shader* shader = shader_create(SHADER_DIR"basic", shader_separate);
+
+    Shader* shader = shader_create(SHADER_DIR"basic", shader_separate);
     if (!shader) {
         fprintf(stderr, "Failed to create shader\n");
         return -1;
@@ -67,14 +51,47 @@ int start_game()
     vao_addbuffer(vao, vbo, layout);
     vao_bind(vao);
     ib_bind(&ib);
+    return 0;
+}
 
+void tick(Game* self)
+{
+    self->time.frameCount++;
+    calc_fps(&self->time);
+}
+
+void render(Game* self)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if(glfwGetKey(self->window, GLFW_KEY_O))
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
+    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+}
+
+int start_game(Game* self)
+{
+    if (!glfwInit()) {
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        return -1;
+    }
+
+    GLFWwindow* window = glfwCreateWindow(640, 480, "Minecraft Clone", NULL, NULL);
+    if (!self->window ) {
+        glfwTerminate();
+        return -1;
+    }
+    
+    self->window = window;
+
+    if(init(self) == -1)
+        return -1;
+ 
     while (!glfwWindowShouldClose(window) && glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
-        frameCount++;
-        calc_fps(&frameCount, &previousTime);
-
-        glClear(GL_COLOR_BUFFER_BIT);
+        tick(self);
         
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        render(self);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

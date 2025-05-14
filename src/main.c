@@ -1,5 +1,6 @@
 #include "core/game.h"
 
 int main(void) {
-    return start_game();
+    Game game;
+    return start_game(&game);
 }

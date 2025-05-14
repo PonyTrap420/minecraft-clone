@@ -1,13 +1,13 @@
 #pragma once
 #include "../util/util.h"
 
-struct VBO
+typedef struct VBO
 {
     GLuint handle;
-};
+} VBO;
 
-struct VBO vbo_init(const void* data, unsigned int size);
+VBO vbo_init(const void* data, unsigned int size);
 
-void vbo_bind(struct VBO* self);
+void vbo_bind(VBO* self);
 
 void vbo_unbind();

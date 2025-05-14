@@ -1,16 +1,16 @@
 #include "vao.h"
 
-struct VAO vao_init(){
-    struct VAO self;
+VAO vao_init(){
+    VAO self;
     glGenVertexArrays(1, &self.handle);
     return self;
 }
 
-void vao_destroy(const struct VAO self){
+void vao_destroy(const VAO self){
     glDeleteVertexArrays(1, &self.handle);
 }
 
-void vao_addbuffer(struct VAO self, struct VBO vbo, struct VertexBufferLayout* layout)
+void vao_addbuffer(VAO self, VBO vbo, VertexBufferLayout* layout)
 {
     vao_bind(self);
     vbo_bind(&vbo);
@@ -27,7 +27,7 @@ void vao_addbuffer(struct VAO self, struct VBO vbo, struct VertexBufferLayout* l
     vbl_free(layout);
 }
 
-void vao_bind(const struct VAO self){
+void vao_bind(const VAO self){
     glBindVertexArray(self.handle);
 }
 

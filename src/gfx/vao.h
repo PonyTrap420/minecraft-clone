@@ -3,17 +3,17 @@
 #include "vbo.h"
 #include "vertex_buffer_layout.h"
 
-struct VAO
+typedef struct VAO
 {
     GLuint handle;
-};
+} VAO;
 
 struct VAO vao_init();
 
-void vao_destroy(struct VAO self);
+void vao_destroy(VAO self);
 
-void vao_addbuffer(struct VAO self, struct VBO vbo, struct VertexBufferLayout* layout);
+void vao_addbuffer(VAO self, VBO vbo, VertexBufferLayout* layout);
 
-void vao_bind(struct VAO self);
+void vao_bind(VAO self);
 
 void vao_unbind();

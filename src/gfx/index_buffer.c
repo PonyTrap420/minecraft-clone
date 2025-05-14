@@ -1,7 +1,7 @@
 #include "index_buffer.h"
 
-struct IndexBuffer ib_init(unsigned int* data, unsigned int count){
-    struct IndexBuffer self;
+IndexBuffer ib_init(unsigned int* data, unsigned int count){
+    IndexBuffer self;
     ASSERT(sizeof(unsigned int) == sizeof(GLuint));
 
     glGenBuffers(1, &self.handle);
@@ -10,11 +10,11 @@ struct IndexBuffer ib_init(unsigned int* data, unsigned int count){
     return self;
 }
 
-void ib_destroy(struct IndexBuffer self){
+void ib_destroy(IndexBuffer self){
     glDeleteBuffers(1, &self.handle);
 }
 
-void ib_bind(struct IndexBuffer* self){
+void ib_bind(IndexBuffer* self){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->handle);
 }
 
