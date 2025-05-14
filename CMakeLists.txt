@@ -12,15 +12,24 @@ file(GLOB LIB_FILES
     lib/stb_image/*.c
 )
 
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/config.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/src/util/config.h
+)
+
+# Include directories
 include_directories(
     lib/stb_image
     lib/cglm/include
     src/include
+    ${CMAKE_CURRENT_BINARY_DIR}/src/util
 )
 
 add_definitions(-DGLEW_STATIC)
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
 add_subdirectory(lib/glew EXCLUDE_FROM_ALL)
+
+add_compile_options(-Wall -Wextra -Werror -Wreturn-type)
 
 add_executable(${PROJECT_NAME}
     ${SRC_FILES}
