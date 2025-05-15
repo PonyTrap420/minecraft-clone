@@ -6,9 +6,23 @@
 #include "../gfx/vbo.h"
 #include "../gfx/shader.h"
 #include "../gfx/index_buffer.h"
+#include "../input/input.h"
 
 int init(Game* self)
 {
+     if (!glfwInit()) {
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        return -1;
+    }
+
+    GLFWwindow* window = glfwCreateWindow(640, 480, "Minecraft Clone", NULL, NULL);
+    if (!self->window ) {
+        glfwTerminate();
+        return -1;
+    }
+    
+    self->window = window;
+
     glfwMakeContextCurrent(self->window);
 
     glfwSwapInterval(1);
@@ -20,6 +34,35 @@ int init(Game* self)
     }
 
     printf("%s\n", (const char*)glGetString(GL_VERSION));
+
+    glfwSetWindowUserPointer(self->window, self);
+
+    self->time = init_time();
+    self->wireframe = false;
+
+    glfwSetKeyCallback(self->window, key_callback);
+
+    return 0;
+}
+
+void tick(Game* self)
+{
+    self->time.frameCount++;
+    calc_fps(&self->time);
+}
+
+void render()
+{
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+}
+
+int start_game(Game* self)
+{
+    if(init(self) == -1)
+        return -1;
 
     Shader* shader = shader_create(SHADER_DIR"basic", shader_separate);
     if (!shader) {
@@ -49,55 +92,20 @@ int init(Game* self)
     vbl_push_float(layout, 3);
 
     vao_addbuffer(vao, vbo, layout);
-    vao_bind(vao);
+    vao_bind(&vao);
     ib_bind(&ib);
-    return 0;
-}
 
-void tick(Game* self)
-{
-    self->time.frameCount++;
-    calc_fps(&self->time);
-}
-
-void render(Game* self)
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if(glfwGetKey(self->window, GLFW_KEY_O))
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
-    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-}
-
-int start_game(Game* self)
-{
-    if (!glfwInit()) {
-        fprintf(stderr, "Failed to initialize GLFW\n");
-        return -1;
-    }
-
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Minecraft Clone", NULL, NULL);
-    if (!self->window ) {
-        glfwTerminate();
-        return -1;
-    }
-    
-    self->window = window;
-
-    if(init(self) == -1)
-        return -1;
  
-    while (!glfwWindowShouldClose(window) && glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
+    while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
         tick(self);
         
         render(self);
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(self->window);
         glfwPollEvents();
     }
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(self->window);
     glfwTerminate();
     return 0;
 }

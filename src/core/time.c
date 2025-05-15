@@ -2,6 +2,14 @@
 #include <GLFW/glfw3.h>
 #include "time.h"
 
+Time init_time(){
+    Time time = {
+        glfwGetTime(),
+        0
+    };
+    return time;
+}
+
 void calc_fps(Time* time){
     double currentTime = glfwGetTime();
 

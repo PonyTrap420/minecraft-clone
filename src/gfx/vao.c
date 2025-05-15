@@ -12,7 +12,7 @@ void vao_destroy(const VAO self){
 
 void vao_addbuffer(VAO self, VBO vbo, VertexBufferLayout* layout)
 {
-    vao_bind(self);
+    vao_bind(&self);
     vbo_bind(&vbo);
 
     VertexBufferElement* elements = layout->elements;
@@ -27,8 +27,8 @@ void vao_addbuffer(VAO self, VBO vbo, VertexBufferLayout* layout)
     vbl_free(layout);
 }
 
-void vao_bind(const VAO self){
-    glBindVertexArray(self.handle);
+void vao_bind(const VAO* self){
+    glBindVertexArray(self->handle);
 }
 
 void vao_unbind(){

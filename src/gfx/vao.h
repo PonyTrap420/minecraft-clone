@@ -14,6 +14,6 @@ void vao_destroy(VAO self);
 
 void vao_addbuffer(VAO self, VBO vbo, VertexBufferLayout* layout);
 
-void vao_bind(VAO self);
+void vao_bind(const VAO* self);
 
 void vao_unbind();

@@ -3,4 +3,6 @@ typedef struct Time{
     unsigned int frameCount;
 }Time;
 
+
+Time init_time();
 void calc_fps(Time* time);
