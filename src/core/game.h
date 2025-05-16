@@ -3,9 +3,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
-
 typedef struct Game{
     GLFWwindow* window;
+    unsigned int winHeight;
+    unsigned int winWidth;
+
     Time time;   
     bool wireframe;
 }Game;

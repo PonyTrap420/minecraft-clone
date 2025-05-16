@@ -7,6 +7,7 @@
 #include "../gfx/shader.h"
 #include "../gfx/index_buffer.h"
 #include "../input/input.h"
+#include "../world/blockmesh.h"
 
 int init(Game* self)
 {
@@ -15,7 +16,9 @@ int init(Game* self)
         return -1;
     }
 
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Minecraft Clone", NULL, NULL);
+    self->winHeight = 480;
+    self->winWidth = 640;
+    GLFWwindow* window = glfwCreateWindow(self->winWidth, self->winHeight, "Minecraft Clone", NULL, NULL);
     if (!self->window ) {
         glfwTerminate();
         return -1;
@@ -35,11 +38,13 @@ int init(Game* self)
 
     printf("%s\n", (const char*)glGetString(GL_VERSION));
 
-    glfwSetWindowUserPointer(self->window, self);
+    glfwSetWindowUserPointer(window, self);
 
     self->time = init_time();
     self->wireframe = false;
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetKeyCallback(self->window, key_callback);
 
     return 0;
@@ -49,6 +54,8 @@ void tick(Game* self)
 {
     self->time.frameCount++;
     calc_fps(&self->time);
+
+    camera_process_input(self->window);
 }
 
 void render()
@@ -56,7 +63,6 @@ void render()
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 }
 
 int start_game(Game* self)
@@ -71,22 +77,13 @@ int start_game(Game* self)
     }
     shader_bind(shader);
 
-    float vertices[] = {
-     0.5f,  0.5f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
-    };
-    unsigned int indices[] = { 
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    };  
+    BlockMesh* mesh = block_mesh_create();
+
+    size_t vertex_data_size = sizeof(float) * mesh->vertex_count * 3;
 
     struct VAO vao = vao_init();
-
-    struct VBO vbo = vbo_init(vertices, sizeof(vertices));
-
-    struct IndexBuffer ib = ib_init(indices, 6);
+    struct VBO vbo = vbo_init(mesh->vertices, vertex_data_size);
+    struct IndexBuffer ib = ib_init(mesh->indices, mesh->index_count);
 
     VertexBufferLayout* layout = vbl_init();
     vbl_push_float(layout, 3);
@@ -95,11 +92,27 @@ int start_game(Game* self)
     vao_bind(&vao);
     ib_bind(&ib);
 
- 
+    Camera* cam = camera_get_instance();
+    mat4 projection;
+    glm_perspective(glm_rad(cam->fov),(float)self->winWidth / (float)self->winHeight, 0.1f, 100.0f, projection);
+
+    mat4 model;
+    glm_mat4_identity(model);
+
     while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
         tick(self);
         
         render(self);
+
+        mat4 view;
+        camera_get_view_matrix(cam, view);
+        shader_bind(shader);
+        shader_set_uniform_mat4f(shader, "view", (const float*)view);
+        shader_set_uniform_mat4f(shader, "projection", (const float*)projection);
+        shader_set_uniform_mat4f(shader, "model", (const float*)model);
+
+
+        glDrawElements(GL_TRIANGLES, mesh->index_count, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(self->window);
         glfwPollEvents();
