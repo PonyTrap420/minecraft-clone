@@ -8,10 +8,12 @@
 #include "../gfx/index_buffer.h"
 #include "../input/input.h"
 #include "../world/blockmesh.h"
+#include "../gfx/renderer.h"
+#include "../world/world.h"
 
 int init(Game* self)
 {
-     if (!glfwInit()) {
+    if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return -1;
     }
@@ -47,6 +49,8 @@ int init(Game* self)
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetKeyCallback(self->window, key_callback);
 
+    renderer_init();
+
     return 0;
 }
 
@@ -60,9 +64,7 @@ void tick(Game* self)
 
 void render()
 {
-    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
+   renderer_clear();
 }
 
 int start_game(Game* self)
@@ -77,22 +79,11 @@ int start_game(Game* self)
     }
     shader_bind(shader);
 
-    BlockMesh* mesh = block_mesh_create();
-
-    size_t vertex_data_size = sizeof(float) * mesh->vertex_count * 3;
-
-    struct VAO vao = vao_init();
-    struct VBO vbo = vbo_init(mesh->vertices, vertex_data_size);
-    struct IndexBuffer ib = ib_init(mesh->indices, mesh->index_count);
-
-    VertexBufferLayout* layout = vbl_init();
-    vbl_push_float(layout, 3);
-
-    vao_addbuffer(vao, vbo, layout);
-    vao_bind(&vao);
-    ib_bind(&ib);
-
     Camera* cam = camera_get_instance();
+
+    Chunk* chunk = world_init();
+    world_prepare(chunk);
+    
     mat4 projection;
     glm_perspective(glm_rad(cam->fov),(float)self->winWidth / (float)self->winHeight, 0.1f, 100.0f, projection);
 
@@ -106,14 +97,14 @@ int start_game(Game* self)
 
         mat4 view;
         camera_get_view_matrix(cam, view);
-        shader_bind(shader);
+        glm_mat4_identity(model);
+
         shader_set_uniform_mat4f(shader, "view", (const float*)view);
         shader_set_uniform_mat4f(shader, "projection", (const float*)projection);
         shader_set_uniform_mat4f(shader, "model", (const float*)model);
 
-
-        glDrawElements(GL_TRIANGLES, mesh->index_count, GL_UNSIGNED_INT, 0);
-
+        world_render(chunk, shader);
+        
         glfwSwapBuffers(self->window);
         glfwPollEvents();
     }
