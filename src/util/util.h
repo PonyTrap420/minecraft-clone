@@ -14,5 +14,6 @@ bool gl_log_call(const char* func, const char* file, int line);
     ASSERT(gl_log_call(#x, __FILE__, __LINE__))
 
 
+int is_directory_empty(const char *path);
 char* read_file(const char* filepath);
 bool file_exists (char *filename);

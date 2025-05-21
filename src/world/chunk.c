@@ -1,12 +1,10 @@
 #include "chunk.h"
 #include <cglm/cglm.h>
+#include "block/blocktypes.h"
 
 void chunk_generate_mesh(Chunk* chunk) {
-    chunk->vertices = malloc(sizeof(vec3) * MAX_VERTS);
-    if (!chunk->vertices) {
-        fprintf(stderr, "Failed to allocate mesh buffer\n");
-        exit(1);
-    }
+    int max_vertices = CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z * 6 * 6;
+    chunk->vertex_data = malloc(max_vertices * sizeof(float));
     chunk->vertex_count = 0;
 
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
@@ -29,7 +27,17 @@ void chunk_generate_mesh(Chunk* chunk) {
                     int dy = directions[i][1];
                     int dz = directions[i][2];
                     if (is_face_visible(chunk, x, y, z, dx, dy, dz)) {
-                        chunk->vertex_count += add_face(chunk->vertices + chunk->vertex_count, x, y, z, i);
+                           BlockType block = chunk->blocks[x][y][z];
+
+                            // calculate float offset in the buffer (5 floats per vertex)
+                            float* ptr = chunk->vertex_data + chunk->vertex_count * 5;
+
+                            // add_face returns number of vertices * 5 floats written
+                            int floats_written = add_face(ptr, x, y, z, i, block);
+
+                            // increment vertex_count by number of vertices added (floats_written/5)
+                            chunk->vertex_count += floats_written;
+
                     }
                 }
             }
@@ -49,40 +57,4 @@ int is_face_visible(Chunk* chunk, int x, int y, int z, int dx, int dy, int dz) {
     }
 
     return chunk->blocks[nx][ny][nz] == 0;
-}
-
-
-int add_face(vec3* out, int x, int y, int z, int face) {
-    vec3 base_vertices[] = {
-        {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}, // 0-3: front face
-        {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, // 4-7: back face
-    };
-
-    static const unsigned char face_indices[6][4] = {
-        {4, 5, 6, 7}, // back (-Z)
-        {0, 1, 2, 3}, // front (+Z)
-        {4, 0, 3, 7}, // left (-X)
-        {1, 5, 6, 2}, // right (+X)
-        {4, 5, 1, 0}, // bottom (-Y)
-        {3, 2, 6, 7}, // top (+Y)
-    };
-
-    vec3 world_vertices[8];
-    for (int i = 0; i < 8; ++i) {
-        glm_vec3_copy(base_vertices[i], world_vertices[i]);
-        world_vertices[i][0] += x;
-        world_vertices[i][1] += y;
-        world_vertices[i][2] += z;
-    }
-
-    const unsigned char* idx = face_indices[face];
-    glm_vec3_copy(world_vertices[idx[0]], out[0]);
-    glm_vec3_copy(world_vertices[idx[1]], out[1]);
-    glm_vec3_copy(world_vertices[idx[2]], out[2]);
-
-    glm_vec3_copy(world_vertices[idx[0]], out[3]);
-    glm_vec3_copy(world_vertices[idx[2]], out[4]);
-    glm_vec3_copy(world_vertices[idx[3]], out[5]);
-
-    return 6;
 }

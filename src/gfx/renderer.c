@@ -16,12 +16,13 @@ bool gl_log_call(const char* func, const char* file, int line) {
 
 void renderer_init()
 {
-    //glEnable(GL_CULL_FACE);  
+    glEnable(GL_DEPTH_TEST);  
+    glEnable(GL_CULL_FACE);  
 }
 
 void renderer_clear(){
-    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.47f, 0.65f, 1.00f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void renderer_draw_elements(VAO* vao, IndexBuffer* ib, Shader* shader){

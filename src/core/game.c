@@ -10,6 +10,8 @@
 #include "../world/blockmesh.h"
 #include "../gfx/renderer.h"
 #include "../world/world.h"
+#include "../gfx/texture.h"
+#include "../gfx/atlas.h"
 
 int init(Game* self)
 {
@@ -18,8 +20,8 @@ int init(Game* self)
         return -1;
     }
 
-    self->winHeight = 480;
-    self->winWidth = 640;
+    self->winHeight = 960;
+    self->winWidth = 1280;
     GLFWwindow* window = glfwCreateWindow(self->winWidth, self->winHeight, "Minecraft Clone", NULL, NULL);
     if (!self->window ) {
         glfwTerminate();
@@ -50,6 +52,7 @@ int init(Game* self)
     glfwSetKeyCallback(self->window, key_callback);
 
     renderer_init();
+    texture_init();
 
     return 0;
 }
@@ -80,6 +83,12 @@ int start_game(Game* self)
     shader_bind(shader);
 
     Camera* cam = camera_get_instance();
+    glm_vec3_copy((vec3){8.0f, 65.0f, 8.0f}, cam->cameraPos);
+
+    char atlas_path[_MAX_PATH];
+    sprintf(atlas_path, "%s%s",TEXTURE_DIR,"block_atlas_0.png");
+    Texture* atlas_texture = texture_create(atlas_path, TEXTURE_DIFFUSE);
+    texture_bind(atlas_texture,0);
 
     Chunk* chunk = world_init();
     world_prepare(chunk);

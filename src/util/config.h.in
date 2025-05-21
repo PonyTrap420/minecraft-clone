@@ -1,2 +1,3 @@
 #define SHADER_DIR "@CMAKE_SOURCE_DIR@/assets/shaders/"
+#define MINECRAFT_DIR "@CMAKE_SOURCE_DIR@/assets/minecraft/"
 #define TEXTURE_DIR "@CMAKE_SOURCE_DIR@/assets/textures/"

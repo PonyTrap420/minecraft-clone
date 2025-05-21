@@ -1,6 +1,8 @@
 /build/
 /bin/
 
+/assets/minecraft
+
 *.o
 *.obj
 *.exe

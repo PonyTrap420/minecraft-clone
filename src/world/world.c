@@ -23,10 +23,12 @@ Chunk* world_init() {
 
 void world_prepare(Chunk* chunk){
     chunk->vao = vao_init();
-    VBO vbo = vbo_init((float*)chunk->vertices, chunk->vertex_count * sizeof(vec3));
+    VBO vbo = vbo_init(chunk->vertex_data, chunk->vertex_count * 5 * sizeof(float));
 
     VertexBufferLayout* layout = vbl_init();
     vbl_push_float(layout, 3);
+    vbl_push_float(layout, 2); 
+
 
     vao_addbuffer(chunk->vao, vbo, layout);
 }
