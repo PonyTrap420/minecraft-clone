@@ -90,14 +90,11 @@ int start_game(Game* self)
     Texture* atlas_texture = texture_create(atlas_path, TEXTURE_DIFFUSE);
     texture_bind(atlas_texture,0);
 
-    Chunk* chunk = world_init();
-    world_prepare(chunk);
+    World* world = world_init(5);
     
     mat4 projection;
     glm_perspective(glm_rad(cam->fov),(float)self->winWidth / (float)self->winHeight, 0.1f, 100.0f, projection);
 
-    mat4 model;
-    glm_mat4_identity(model);
 
     while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
         tick(self);
@@ -106,13 +103,12 @@ int start_game(Game* self)
 
         mat4 view;
         camera_get_view_matrix(cam, view);
-        glm_mat4_identity(model);
 
         shader_set_uniform_mat4f(shader, "view", (const float*)view);
         shader_set_uniform_mat4f(shader, "projection", (const float*)projection);
-        shader_set_uniform_mat4f(shader, "model", (const float*)model);
 
-        world_render(chunk, shader);
+        world_update(world, cam->cameraPos[0], cam->cameraPos[2]);
+        world_render(world, shader);
         
         glfwSwapBuffers(self->window);
         glfwPollEvents();

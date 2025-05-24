@@ -58,3 +58,12 @@ bool vbl_push_uint(VertexBufferLayout* layout, unsigned int count) {
 bool vbl_push_uchar(VertexBufferLayout* layout, unsigned int count) {
     return vbl_push(layout, GL_UNSIGNED_BYTE, count, GL_TRUE);
 }
+
+bool vbl_push_mat4(VertexBufferLayout* layout) {
+    for (int i = 0; i < 4; i++) {
+        if (!vbl_push(layout, GL_FLOAT, 4, GL_FALSE)) {
+            return false;
+        }
+    }
+    return true;
+}

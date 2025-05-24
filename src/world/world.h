@@ -1,11 +1,16 @@
 #include "chunk.h"
 #include "block/blocktypes.h"
 #include "../gfx/renderer.h"
+#include <cglm/cglm.h>
 
-typedef struct World{
-    Chunk* chunks;
+typedef struct {
+    Chunk*** chunks;
+    int size_x;
+    int size_z;
+    int origin_x;
+    int origin_z;
 } World;
 
-Chunk* world_init();
-void world_prepare(Chunk* chunk);
-void world_render(Chunk* chunk, Shader* shader);
+World* world_init(int radius);
+void world_render(World* world, Shader* shader);
+void world_update(World* world, float player_x, float player_z);

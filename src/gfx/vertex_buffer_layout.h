@@ -26,3 +26,4 @@ void vbl_free(VertexBufferLayout* layout);
 bool vbl_push_float(VertexBufferLayout* layout, unsigned int count);
 bool vbl_push_uint(VertexBufferLayout* layout, unsigned int count);
 bool vbl_push_uchar(VertexBufferLayout* layout, unsigned int count);
+bool vbl_push_mat4(VertexBufferLayout* layout);

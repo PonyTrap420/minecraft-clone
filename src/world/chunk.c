@@ -2,6 +2,29 @@
 #include <cglm/cglm.h>
 #include "block/blocktypes.h"
 
+Chunk* chunk_init() {
+    Chunk* chunk = malloc(sizeof(Chunk));
+    if (!chunk) return NULL;
+
+    for (int x = 0; x < CHUNK_SIZE_X; x++) {
+        for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+            for (int y = 0; y < CHUNK_SIZE_Y; y++) {
+                if (y < 64 && y > 60)
+                    chunk->blocks[x][y][z] = BLOCK_DIRT;
+                else if(y<=60)
+                    chunk->blocks[x][y][z] = BLOCK_STONE;
+                else 
+                    chunk->blocks[x][y][z] = BLOCK_AIR;   
+            }
+        }
+    }
+
+    chunk_generate_mesh(chunk);
+    chunk_prepare(chunk);
+    return chunk;
+}
+
+
 void chunk_generate_mesh(Chunk* chunk) {
     int max_vertices = CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z * 6 * 6;
     chunk->vertex_data = malloc(max_vertices * sizeof(float));
@@ -45,6 +68,22 @@ void chunk_generate_mesh(Chunk* chunk) {
     }
 }
 
+void chunk_prepare(Chunk* chunk){
+    chunk->vao = vao_init();
+    VBO vbo = vbo_init(chunk->vertex_data, chunk->vertex_count * 5 * sizeof(float));
+
+    VertexBufferLayout* layout = vbl_init();
+    vbl_push_float(layout, 3);
+    vbl_push_float(layout, 2);
+
+    vao_addbuffer(chunk->vao, vbo, layout);
+}
+
+void chunk_render(Chunk* chunk, Shader* shader){
+    renderer_draw_arrays(&chunk->vao, shader, 0, chunk->vertex_count);
+}
+
+
 int is_face_visible(Chunk* chunk, int x, int y, int z, int dx, int dy, int dz) {
     int nx = x + dx;
     int ny = y + dy;
@@ -57,4 +96,19 @@ int is_face_visible(Chunk* chunk, int x, int y, int z, int dx, int dy, int dz) {
     }
 
     return chunk->blocks[nx][ny][nz] == 0;
+}
+
+void chunk_free(Chunk* chunk) {
+    if (!chunk) return;
+
+    if (chunk->vertex_data) {
+        free(chunk->vertex_data);
+        chunk->vertex_data = NULL;
+    }
+
+    // Delete VAO and associated buffers
+    vao_destroy(chunk->vao);
+
+    // Free the chunk itself
+    free(chunk);
 }
