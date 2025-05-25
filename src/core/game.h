@@ -3,6 +3,16 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
+#include "../gfx/shader.h"
+#include "../gfx/index_buffer.h"
+#include "../input/input.h"
+#include "../world/blockmesh.h"
+#include "../gfx/renderer.h"
+#include "../world/world.h"
+#include "../gfx/texture.h"
+#include "../gfx/atlas.h"
+#include "../entity/camera.h"
+
 typedef struct Game{
     GLFWwindow* window;
     unsigned int winHeight;
@@ -10,6 +20,9 @@ typedef struct Game{
 
     Time time;   
     bool wireframe;
+
+    World* world;
+    Camera* camera;
 }Game;
 
 int start_game(Game* self);
@@ -20,4 +33,4 @@ void tick(Game* self);
 
 void update();
 
-void render();
+void render(Game* self, Shader* shader);
