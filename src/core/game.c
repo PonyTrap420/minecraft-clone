@@ -4,6 +4,7 @@
 #include <cglm/cglm.h>
 #include "../gfx/vao.h"
 #include "../gfx/vbo.h"
+#include <noise1234.h>
 
 int init(Game* self)
 {
@@ -95,6 +96,9 @@ int start_game(Game* self)
     texture_bind(atlas_texture,0);
 
     self->world = world_init(2);
+
+    float n = noise3(1.0f,1.0f,1.0f);
+    printf("%f", n);
 
     while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
         tick(self);

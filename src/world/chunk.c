@@ -1,22 +1,31 @@
 #include "chunk.h"
 #include <cglm/cglm.h>
 #include "block/blocktypes.h"
+#include <noise1234.h>
 
-Chunk* chunk_init() {
+Chunk* chunk_init(int chunk_x, int chunk_z) {
     Chunk* chunk = malloc(sizeof(Chunk));
     if (!chunk) return NULL;
 
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
             for (int y = 0; y < CHUNK_SIZE_Y; y++) {
-                if (y < 64 && y > 60)
+                int world_x = chunk_x * CHUNK_SIZE_X + x;
+                int world_z = chunk_z * CHUNK_SIZE_Z + z;
+                
+                float h = noise2(world_x * 0.05f, world_z * 0.05f) * 8 + 64;
+
+                if (h < 60) h = 60;
+                if (h > 68) h = 68;
+                
+                if (y < h && y > h-4)
                     chunk->blocks[x][y][z] = BLOCK_DIRT;
-                else if(y<=60)
+                else if(y<=h-4)
                     chunk->blocks[x][y][z] = BLOCK_STONE;
                 else 
                     chunk->blocks[x][y][z] = BLOCK_AIR;   
+                }
             }
-        }
     }
 
     chunk_generate_mesh(chunk);

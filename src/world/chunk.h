@@ -19,7 +19,7 @@ typedef struct {
     float* vertex_data; 
 } Chunk;
 
-Chunk* chunk_init();
+Chunk* chunk_init(int coordX, int coordY);
 void chunk_prepare(Chunk* chunk);
 void chunk_render(Chunk* chunk, Shader* shader);
 void chunk_generate_mesh(Chunk* chunk);

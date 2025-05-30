@@ -17,7 +17,7 @@ bool gl_log_call(const char* func, const char* file, int line) {
 void renderer_init()
 {
     glEnable(GL_DEPTH_TEST);  
-    glEnable(GL_CULL_FACE);  
+    //glEnable(GL_CULL_FACE);  
 }
 
 void renderer_clear(){

@@ -19,6 +19,7 @@ configure_file(
 
 # Include directories
 include_directories(
+    lib/noise
     lib/parson
     lib/miniz
     lib/stb

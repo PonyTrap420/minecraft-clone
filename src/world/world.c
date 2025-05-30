@@ -5,7 +5,9 @@ static void world_allocate_chunks(World* world) {
     for (int i = 0; i < world->size_x; i++) {
         world->chunks[i] = malloc(world->size_z * sizeof(Chunk*));
         for (int j = 0; j < world->size_z; j++) {
-            Chunk* chunk = chunk_init();
+            int chunk_x = world->origin_x + i;
+            int chunk_z = world->origin_z + j;
+            Chunk* chunk = chunk_init(chunk_x,chunk_z);
             chunk_prepare(chunk);
             world->chunks[i][j] = chunk;
         }
@@ -26,6 +28,16 @@ World* world_init(int radius) {
     return world;
 }
 
+Chunk* world_get_chunk(World* world, int chunk_x, int chunk_z) {
+    int i = chunk_x - world->origin_x;
+    int j = chunk_z - world->origin_z;
+
+    if (i < 0 || i >= world->size_x || j < 0 || j >= world->size_z)
+        return NULL;
+
+    return world->chunks[i][j];
+}
+
 void world_update(World* world, float player_x, float player_z) {
     int player_chunk_x = floor(player_x / CHUNK_SIZE_X);
     int player_chunk_z = floor(player_z / CHUNK_SIZE_Z);
@@ -38,58 +50,56 @@ void world_update(World* world, float player_x, float player_z) {
 
     if (dx == 0 && dz == 0) return;
 
-    // Step 1: free chunks that moved out of view
-    for (int i = 0; i < world->size_x; i++) {
-        for (int j = 0; j < world->size_z; j++) {
-            int chunk_x = world->origin_x + i;
-            int chunk_z = world->origin_z + j;
-
-            int new_x = chunk_x + dx;
-            int new_z = chunk_z + dz;
-
-            if (new_x < new_origin_x || new_x >= new_origin_x + world->size_x ||
-                new_z < new_origin_z || new_z >= new_origin_z + world->size_z) {
-                chunk_free(world->chunks[i][j]);
-                world->chunks[i][j] = NULL;
-            }
-        }
-    }
-
+    // Prepare new chunk grid
     Chunk*** new_chunks = malloc(world->size_x * sizeof(Chunk**));
     for (int i = 0; i < world->size_x; i++) {
         new_chunks[i] = malloc(world->size_z * sizeof(Chunk*));
         for (int j = 0; j < world->size_z; j++) {
-            new_chunks[i][j] = NULL;
+            int chunk_x = new_origin_x + i;
+            int chunk_z = new_origin_z + j;
 
-            int src_i = i - dx;
-            int src_j = j - dz;
-
-            if (src_i >= 0 && src_i < world->size_x &&
-                src_j >= 0 && src_j < world->size_z) {
-                new_chunks[i][j] = world->chunks[src_i][src_j];
+            // Try to reuse the chunk from the old grid
+            Chunk* old_chunk = world_get_chunk(world, chunk_x, chunk_z);
+            if (old_chunk) {
+                new_chunks[i][j] = old_chunk;
+            } else {
+                // If not reusable, generate a new one
+                Chunk* chunk = chunk_init(chunk_x, chunk_z);
+                chunk_prepare(chunk);
+                new_chunks[i][j] = chunk;
             }
         }
     }
 
+    // Free old chunks that were not reused
     for (int i = 0; i < world->size_x; i++) {
+        for (int j = 0; j < world->size_z; j++) {
+            int old_chunk_x = world->origin_x + i;
+            int old_chunk_z = world->origin_z + j;
+
+            // If not present in new chunk grid, free it
+            Chunk* reused = world_get_chunk(&(World){
+                .chunks = new_chunks,
+                .origin_x = new_origin_x,
+                .origin_z = new_origin_z,
+                .size_x = world->size_x,
+                .size_z = world->size_z
+            }, old_chunk_x, old_chunk_z);
+
+            if (world->chunks[i][j] && reused != world->chunks[i][j]) {
+                chunk_free(world->chunks[i][j]);
+            }
+        }
         free(world->chunks[i]);
     }
     free(world->chunks);
 
+    // Replace with new grid
     world->chunks = new_chunks;
     world->origin_x = new_origin_x;
     world->origin_z = new_origin_z;
-
-    for (int i = 0; i < world->size_x; i++) {
-        for (int j = 0; j < world->size_z; j++) {
-            if (world->chunks[i][j] == NULL) {
-                Chunk* chunk = chunk_init();
-                chunk_prepare(chunk);
-                world->chunks[i][j] = chunk;
-            }
-        }
-    }
 }
+
 
 void world_render(World* world, Shader* shader)
 {   
