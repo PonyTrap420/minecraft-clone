@@ -3,9 +3,14 @@
 #include "block/blocktypes.h"
 #include <noise1234.h>
 
-Chunk* chunk_init(int chunk_x, int chunk_z) {
+Chunk* world_get_chunk(World* world, int chunk_x, int chunk_z);
+
+Chunk* chunk_init(World* world, int chunk_x, int chunk_z) {
     Chunk* chunk = malloc(sizeof(Chunk));
     if (!chunk) return NULL;
+    chunk->chunk_x = chunk_x;
+    chunk->chunk_z = chunk_z;
+    chunk->world = world;
 
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int z = 0; z < CHUNK_SIZE_Z; z++) {
@@ -28,8 +33,6 @@ Chunk* chunk_init(int chunk_x, int chunk_z) {
             }
     }
 
-    chunk_generate_mesh(chunk);
-    chunk_prepare(chunk);
     return chunk;
 }
 
@@ -58,7 +61,7 @@ void chunk_generate_mesh(Chunk* chunk) {
                     int dx = directions[i][0];
                     int dy = directions[i][1];
                     int dz = directions[i][2];
-                    if (is_face_visible(chunk, x, y, z, dx, dy, dz)) {
+                    if (is_face_visible(chunk->world, chunk, x, y, z, dx, dy, dz)) {
                            BlockType block = chunk->blocks[x][y][z];
 
                             // calculate float offset in the buffer (5 floats per vertex)
@@ -93,19 +96,32 @@ void chunk_render(Chunk* chunk, Shader* shader){
 }
 
 
-int is_face_visible(Chunk* chunk, int x, int y, int z, int dx, int dy, int dz) {
+int is_face_visible(World* world, Chunk* chunk, int x, int y, int z, int dx, int dy, int dz) {
     int nx = x + dx;
     int ny = y + dy;
     int nz = z + dz;
 
-    if (nx < 0 || nx >= CHUNK_SIZE_X ||
-        ny < 0 || ny >= CHUNK_SIZE_Y ||
-        nz < 0 || nz >= CHUNK_SIZE_Z) {
-        return 1;
+    if (ny < 0 || ny >= CHUNK_SIZE_Y) {
+        return 1; // outside vertical bounds → visible
     }
 
-    return chunk->blocks[nx][ny][nz] == 0;
+    // Check if neighboring block is outside the current chunk
+    if (nx < 0 || nx >= CHUNK_SIZE_X || nz < 0 || nz >= CHUNK_SIZE_Z) {
+        int neighbor_chunk_x = chunk->chunk_x + (nx < 0 ? -1 : (nx >= CHUNK_SIZE_X ? 1 : 0));
+        int neighbor_chunk_z = chunk->chunk_z + (nz < 0 ? -1 : (nz >= CHUNK_SIZE_Z ? 1 : 0));
+
+        Chunk* target_chunk = world_get_chunk(world, neighbor_chunk_x, neighbor_chunk_z);
+       if (!target_chunk) return 1;
+        if (target_chunk->chunk_x != neighbor_chunk_x || target_chunk->chunk_z != neighbor_chunk_z) return 1;
+
+        nx = (nx + CHUNK_SIZE_X) % CHUNK_SIZE_X;
+        nz = (nz + CHUNK_SIZE_Z) % CHUNK_SIZE_Z;
+        return target_chunk->blocks[nx][ny][nz] == BLOCK_AIR;
+    }
+    return chunk->blocks[nx][ny][nz] == BLOCK_AIR;
+
 }
+
 
 void chunk_free(Chunk* chunk) {
     if (!chunk) return;

@@ -60,6 +60,7 @@ BlockMesh* block_mesh_create() {
     return mesh;
 }
 
+
 void block_mesh_destroy(BlockMesh* mesh) {
     if (!mesh) return;
     free(mesh->vertices);

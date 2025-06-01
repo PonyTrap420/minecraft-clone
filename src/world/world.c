@@ -7,9 +7,15 @@ static void world_allocate_chunks(World* world) {
         for (int j = 0; j < world->size_z; j++) {
             int chunk_x = world->origin_x + i;
             int chunk_z = world->origin_z + j;
-            Chunk* chunk = chunk_init(chunk_x,chunk_z);
-            chunk_prepare(chunk);
+            Chunk* chunk = chunk_init(world, chunk_x,chunk_z);
             world->chunks[i][j] = chunk;
+        }
+    }
+    for (int i = 0; i < world->size_x; i++) {
+        for (int j = 0; j < world->size_z; j++) {
+            Chunk* chunk = world->chunks[i][j];
+            chunk_generate_mesh(chunk);
+            chunk_prepare(chunk); 
         }
     }
 }
@@ -50,34 +56,32 @@ void world_update(World* world, float player_x, float player_z) {
 
     if (dx == 0 && dz == 0) return;
 
-    // Prepare new chunk grid
     Chunk*** new_chunks = malloc(world->size_x * sizeof(Chunk**));
+    bool** is_new = malloc(world->size_x * sizeof(bool*));
     for (int i = 0; i < world->size_x; i++) {
         new_chunks[i] = malloc(world->size_z * sizeof(Chunk*));
+        is_new[i] = malloc(world->size_z * sizeof(bool));
         for (int j = 0; j < world->size_z; j++) {
             int chunk_x = new_origin_x + i;
             int chunk_z = new_origin_z + j;
 
-            // Try to reuse the chunk from the old grid
             Chunk* old_chunk = world_get_chunk(world, chunk_x, chunk_z);
             if (old_chunk) {
                 new_chunks[i][j] = old_chunk;
+                is_new[i][j] = false;
             } else {
-                // If not reusable, generate a new one
-                Chunk* chunk = chunk_init(chunk_x, chunk_z);
-                chunk_prepare(chunk);
+                Chunk* chunk = chunk_init(world, chunk_x, chunk_z);
                 new_chunks[i][j] = chunk;
+                is_new[i][j] = true;
             }
         }
     }
 
-    // Free old chunks that were not reused
     for (int i = 0; i < world->size_x; i++) {
         for (int j = 0; j < world->size_z; j++) {
             int old_chunk_x = world->origin_x + i;
             int old_chunk_z = world->origin_z + j;
 
-            // If not present in new chunk grid, free it
             Chunk* reused = world_get_chunk(&(World){
                 .chunks = new_chunks,
                 .origin_x = new_origin_x,
@@ -94,12 +98,50 @@ void world_update(World* world, float player_x, float player_z) {
     }
     free(world->chunks);
 
-    // Replace with new grid
     world->chunks = new_chunks;
     world->origin_x = new_origin_x;
     world->origin_z = new_origin_z;
+
+    for (int i = 0; i < world->size_x; i++) {
+        for (int j = 0; j < world->size_z; j++) {
+            if (!is_new[i][j]) continue;
+
+            for (int di = -1; di <= 1; di++) {
+                for (int dj = -1; dj <= 1; dj++) {
+                    int ni = i + di;
+                    int nj = j + dj;
+                    if (ni < 0 || nj < 0 || ni >= world->size_x || nj >= world->size_z) continue;
+
+                    Chunk* chunk = world->chunks[ni][nj];
+                    if (chunk) {
+                        chunk_generate_mesh(chunk);
+                        chunk_prepare(chunk);
+                    }
+                }
+            }
+        }
+        free(is_new[i]);
+    }
+    free(is_new);
 }
 
+int world_get_block(World* world, int x, int y, int z) {
+    if (y < 0 || y >= CHUNK_SIZE_Y) return BLOCK_AIR;
+
+    int chunk_x = x / CHUNK_SIZE_X;
+    int chunk_z = z / CHUNK_SIZE_Z;
+
+    if (x < 0 && x % CHUNK_SIZE_X != 0) chunk_x -= 1;
+    if (z < 0 && z % CHUNK_SIZE_Z != 0) chunk_z -= 1;
+
+    Chunk* chunk = world_get_chunk(world, chunk_x, chunk_z);
+    if (!chunk) return 0;
+
+    int local_x = x - chunk_x * CHUNK_SIZE_X;
+    int local_z = z - chunk_z * CHUNK_SIZE_Z;
+
+    return chunk->blocks[local_x][y][local_z];
+}
 
 void world_render(World* world, Shader* shader)
 {   

@@ -12,6 +12,7 @@
 #include "../gfx/texture.h"
 #include "../gfx/atlas.h"
 #include "../entity/camera.h"
+#include "../entity/picker.h"
 
 typedef struct Game{
     GLFWwindow* window;
@@ -23,6 +24,11 @@ typedef struct Game{
 
     World* world;
     Camera* camera;
+
+    Shader* shader_textured;
+    Shader* shader_solid;
+    BlockHit picked_block;
+    BlockMesh* blockmesh;
 }Game;
 
 int start_game(Game* self);
@@ -33,4 +39,4 @@ void tick(Game* self);
 
 void update();
 
-void render(Game* self, Shader* shader);
+void render(Game* self);
