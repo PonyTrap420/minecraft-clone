@@ -52,6 +52,10 @@ void shader_set_uniform_1f(Shader* self, const char* name, float value) {
     glUniform1f(get_uniform_location(self->handle, name), value);
 }
 
+void shader_set_uniform_2f(Shader* self, const char* name, float v0, float v1) {
+    glUniform2f(get_uniform_location(self->handle, name), v0, v1);
+}
+
 void shader_set_uniform_3f(Shader* self, const char* name, float v0, float v1, float v2) {
     glUniform3f(get_uniform_location(self->handle, name), v0, v1, v2);
 }

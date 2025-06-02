@@ -25,6 +25,7 @@ void shader_unbind();
 
 void shader_set_uniform_1i(Shader* self, const char* name, int value);
 void shader_set_uniform_1f(Shader* self, const char* name, float value);
+void shader_set_uniform_2f(Shader* self, const char* name, float v0, float v1);
 void shader_set_uniform_3f(Shader* self, const char* name, float v0, float v1, float v2);
 void shader_set_uniform_4f(Shader* self, const char* name, float v0, float v1, float v2, float v3);
 void shader_set_uniform_mat4f(Shader* self, const char* name, const float* matrix); // 4x4 matrix as 1D array

@@ -12,3 +12,5 @@ typedef struct {
 } BlockHit;
 
 BlockHit pick_block(World* world, Camera* camera, float max_distance);
+int picker_get_wireframe();
+void picker_init_wireframe_cube();

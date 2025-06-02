@@ -6,9 +6,6 @@
 #include "../gfx/vbo.h"
 #include <noise1234.h>
 
-
-unsigned int wireframe_vao, wireframe_vbo, wireframe_ebo;
-
 int init(Game* self)
 {
     if (!glfwInit()) {
@@ -50,7 +47,7 @@ int init(Game* self)
     renderer_init();
     texture_init();
 
-    init_wireframe_cube();
+    picker_init_wireframe_cube();
 
     return 0;
 }
@@ -105,7 +102,7 @@ void render(Game* self)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glLineWidth(2.5f);
 
-        glBindVertexArray(wireframe_vao);
+        glBindVertexArray(picker_get_wireframe());
         glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -139,13 +136,16 @@ int start_game(Game* self)
 
     self->world = world_init(5);
 
-    float n = noise3(1.0f,1.0f,1.0f);
-    printf("%f", n);
+    Shader* crosshair_shader = shader_create(SHADER_DIR"crosshair", shader_separate);
 
     while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
         tick(self);
         
         render(self);
+
+        shader_bind(crosshair_shader);
+        shader_set_uniform_2f(crosshair_shader, "resolution", self->winWidth, self->winHeight);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(self->window);
         glfwPollEvents();
