@@ -38,16 +38,17 @@ int init(Game* self)
     glfwSetWindowUserPointer(window, self);
 
     self->time = init_time();
-    self->wireframe = false;
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetKeyCallback(self->window, key_callback);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     renderer_init();
     texture_init();
 
-    picker_init_wireframe_cube();
+    picker_init();
+    init_chunk_border_mesh();
 
     return 0;
 }
@@ -56,10 +57,13 @@ void tick(Game* self)
 {
     self->time.frameCount++;
     calc_fps(&self->time);
+}
+
+void update(Game* self)
+{
 
     camera_process_input(self->window);
-
-    self->picked_block = pick_block(self->world, self->camera, 10.0f);
+    self->picked_block = picker_pick_block(self->world, self->camera, 10.0f);
 }
 
 void render(Game* self)
@@ -80,36 +84,19 @@ void render(Game* self)
     world_render(self->world, self->shader_textured);
 
     if (self->picked_block.hit) {
-        glDisable(GL_POLYGON_OFFSET_FILL);
-        shader_bind(self->shader_solid);
-        shader_set_uniform_mat4f(self->shader_solid, "view", (float*)view);
-        shader_set_uniform_mat4f(self->shader_solid, "projection", (float*)projection);
-        shader_set_uniform_3f(self->shader_solid, "color", 0.0f, 0.0f, 0.0f); // black
+        picker_render(self->picked_block, self->flags & GAME_FLAG_WIREFRAME, (float*)view, (float*)projection);
+    }
+    if (self->flags & GAME_FLAG_SHOW_CHUNKS) {
+        for (int i = 0; i < self->world->size_x; i++) {
+            for (int j = 0; j < self->world->size_z; j++) {
+                if ((i + j) % 2 == 0) continue;
 
-        mat4 model;
-        glm_mat4_identity(model);
-
-        // Translate to block position
-        glm_translate(model, (vec3){
-            self->picked_block.x,
-            self->picked_block.y,
-            self->picked_block.z
-        });
-        
-        shader_set_uniform_mat4f(self->shader_solid, "model", (float*)model);
-
-        glEnable(GL_DEPTH_TEST);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glLineWidth(2.5f);
-
-        glBindVertexArray(picker_get_wireframe());
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glLineWidth(1.0f);
-
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(1.0f, 1.0f);
+                Chunk* chunk = self->world->chunks[i][j];
+                if (chunk) {
+                    render_chunk_border(chunk->chunk_x, chunk->chunk_z, (float*)view, (float*)projection);
+                }
+            }
+        }
     }
 }
 
@@ -119,7 +106,6 @@ int start_game(Game* self)
         return -1;
 
     self->shader_textured = shader_create(SHADER_DIR"basic", shader_separate);
-    self->shader_solid = shader_create(SHADER_DIR"solid", shader_separate);
     if (!self->shader_textured) {
         fprintf(stderr, "Failed to create shader\n");
         return -1;
@@ -140,6 +126,7 @@ int start_game(Game* self)
 
     while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
         tick(self);
+        update(self);
         
         render(self);
 

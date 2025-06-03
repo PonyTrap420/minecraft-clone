@@ -13,20 +13,22 @@
 #include "../gfx/atlas.h"
 #include "../entity/camera.h"
 #include "../entity/picker.h"
+#include "../gfx/debug.h"
 
+#define GAME_FLAG_WIREFRAME   (1 << 0)
+#define GAME_FLAG_SHOW_CHUNKS (1 << 1)
 typedef struct Game{
     GLFWwindow* window;
     unsigned int winHeight;
     unsigned int winWidth;
 
     Time time;   
-    bool wireframe;
+    uint8_t flags;
 
     World* world;
     Camera* camera;
 
     Shader* shader_textured;
-    Shader* shader_solid;
     BlockHit picked_block;
     BlockMesh* blockmesh;
 }Game;
@@ -37,6 +39,6 @@ int init(Game* self);
 
 void tick(Game* self);
 
-void update();
+void update(Game* self);
 
 void render(Game* self);

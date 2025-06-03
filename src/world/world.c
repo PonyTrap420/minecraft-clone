@@ -125,22 +125,71 @@ void world_update(World* world, float player_x, float player_z) {
     free(is_new);
 }
 
+bool world_resolve_coordinates(int x, int y, int z,
+                               int* chunk_x, int* chunk_z,
+                               int* local_x, int* local_z) {
+    if (y < 0 || y >= CHUNK_SIZE_Y) return false;
+
+    *chunk_x = x / CHUNK_SIZE_X;
+    *chunk_z = z / CHUNK_SIZE_Z;
+
+    if (x < 0 && x % CHUNK_SIZE_X != 0) (*chunk_x)--;
+    if (z < 0 && z % CHUNK_SIZE_Z != 0) (*chunk_z)--;
+
+    *local_x = x - (*chunk_x) * CHUNK_SIZE_X;
+    *local_z = z - (*chunk_z) * CHUNK_SIZE_Z;
+
+    return true;
+}
+
 int world_get_block(World* world, int x, int y, int z) {
-    if (y < 0 || y >= CHUNK_SIZE_Y) return BLOCK_AIR;
-
-    int chunk_x = x / CHUNK_SIZE_X;
-    int chunk_z = z / CHUNK_SIZE_Z;
-
-    if (x < 0 && x % CHUNK_SIZE_X != 0) chunk_x -= 1;
-    if (z < 0 && z % CHUNK_SIZE_Z != 0) chunk_z -= 1;
+    int chunk_x, chunk_z, local_x, local_z;
+    if (!world_resolve_coordinates(x, y, z, &chunk_x, &chunk_z, &local_x, &local_z))
+        return BLOCK_AIR;
 
     Chunk* chunk = world_get_chunk(world, chunk_x, chunk_z);
-    if (!chunk) return 0;
-
-    int local_x = x - chunk_x * CHUNK_SIZE_X;
-    int local_z = z - chunk_z * CHUNK_SIZE_Z;
+    if (!chunk) return BLOCK_AIR;
 
     return chunk->blocks[local_x][y][local_z];
+}
+
+void world_destroy_block(World* world, int x, int y, int z) {
+    int chunk_x, chunk_z, local_x, local_z;
+    if (!world_resolve_coordinates(x, y, z, &chunk_x, &chunk_z, &local_x, &local_z))
+        return;
+
+    Chunk* chunk = world_get_chunk(world, chunk_x, chunk_z);
+    if (!chunk) return;
+
+    chunk->blocks[local_x][y][local_z] = BLOCK_AIR;
+    chunk_generate_mesh(chunk);
+    chunk_prepare(chunk);
+}
+
+void world_place_block(World* world, int x, int y, int z, int face, int block_type) {
+    switch (face) {
+        case FACE_FRONT:  z -= 1; break; 
+        case FACE_BACK:   z += 1; break; 
+        case FACE_LEFT:   x -= 1; break; 
+        case FACE_RIGHT:  x += 1; break; 
+        case FACE_BOTTOM: y -= 1; break; 
+        case FACE_TOP:    y += 1; break; 
+        default: return;
+    }
+
+    int chunk_x, chunk_z, local_x, local_z;
+    if (!world_resolve_coordinates(x, y, z, &chunk_x, &chunk_z, &local_x, &local_z))
+        return;
+
+    if (y < 0 || y >= CHUNK_SIZE_Y || block_type == BLOCK_AIR)
+        return;
+
+    Chunk* chunk = world_get_chunk(world, chunk_x, chunk_z);
+    if (!chunk) return;
+
+    chunk->blocks[local_x][y][local_z] = block_type;
+    chunk_generate_mesh(chunk);
+    chunk_prepare(chunk);
 }
 
 void world_render(World* world, Shader* shader)

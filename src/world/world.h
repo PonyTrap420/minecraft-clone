@@ -4,6 +4,7 @@
 #include "block/blocktypes.h"
 #include "../gfx/renderer.h"
 #include <cglm/cglm.h>
+#include "../entity/picker.h"
 
 typedef struct World{
     Chunk*** chunks;
@@ -17,4 +18,6 @@ World* world_init(int radius);
 void world_render(World* world, Shader* shader);
 void world_update(World* world, float player_x, float player_z);
 Chunk* world_get_chunk(World* world, int chunk_x, int chunk_z);
+void world_destroy_block(World* world, int x, int y, int z);
+void world_place_block(World* world, int x, int y, int z, int face, int block_type);
 int world_get_block(World* world, int x, int y, int z);
