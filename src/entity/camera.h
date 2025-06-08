@@ -14,7 +14,9 @@ typedef struct {
     vec3 cameraPos;
     vec3 cameraFront;
     vec3 cameraUp;
-
+    
+    vec3 bobbingOffset;
+    
     float pitch;
     float yaw;
     float fov;

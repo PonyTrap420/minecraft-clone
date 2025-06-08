@@ -216,4 +216,24 @@ void player_update(Player* player, float deltaTime, World* world, GLFWwindow* wi
             cam->cameraPos[1] -= flySpeed * deltaTime;
         }
     }
+
+    bool isMoving = forward || backward || left || right;
+    player->isMoving = isMoving;
+    
+    if (isMoving && player->onGround && !player->isFlying) {
+        player->cameraBobTime += deltaTime * 12.0f;
+        
+        vec3 camRight;
+        glm_vec3_crossn(cam->cameraFront, cam->cameraUp, camRight);
+        
+        float horizontalBob = sinf(player->cameraBobTime) * 0.06f; 
+        float verticalBob = sinf(player->cameraBobTime * 2.0f) * 0.04f;
+        
+        cam->bobbingOffset[0] = camRight[0] * horizontalBob;
+        cam->bobbingOffset[2] = camRight[2] * horizontalBob;
+        cam->bobbingOffset[1] = verticalBob;
+        
+    } else {
+        glm_vec3_scale(cam->bobbingOffset, 0.95f, cam->bobbingOffset);
+    }
 }

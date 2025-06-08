@@ -19,7 +19,10 @@ typedef struct Player {
     vec3 velocity; 
     float jumpStrength;
     float moveSpeed;
-    
+    float cameraBobAmount;
+    float cameraBobTime;
+
+    bool isMoving;
     bool onGround;
     bool isFlying;
 

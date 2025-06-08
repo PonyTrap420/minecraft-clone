@@ -77,7 +77,11 @@ void camera_scroll_input(Camera* camera, double xoffset, double yoffset) {
 }
 
 void camera_get_view_matrix(Camera* camera, mat4 dest) {
+    vec3 adjustedPos;
+    glm_vec3_add(camera->cameraPos, camera->bobbingOffset, adjustedPos);
+    
     vec3 center;
-    glm_vec3_add(camera->cameraPos, camera->cameraFront, center);
-    glm_lookat(camera->cameraPos, center, camera->cameraUp, dest);
+    glm_vec3_add(adjustedPos, camera->cameraFront, center);
+    
+    glm_lookat(adjustedPos, center, camera->cameraUp, dest);
 }
