@@ -19,5 +19,6 @@ void world_render(World* world, Shader* shader);
 void world_update(World* world, float player_x, float player_z);
 Chunk* world_get_chunk(World* world, int chunk_x, int chunk_z);
 void world_destroy_block(World* world, int x, int y, int z);
-void world_place_block(World* world, int x, int y, int z, int face, int block_type);
+void world_place_block(World* world, int x, int y, int z, int face, int block_type, vec3 camera_pos, float player_width, float player_height);
 int world_get_block(World* world, int x, int y, int z);
+float world_get_ground_height_at(World* world, float wx, float wz);

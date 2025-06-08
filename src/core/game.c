@@ -37,12 +37,16 @@ int init(Game* self)
 
     glfwSetWindowUserPointer(window, self);
 
+    self->flags = 0;
     self->time = init_time();
-
+    
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+    
+    self->player = player_get_instance();
+    self->camera = &self->player->camera;
 
     renderer_init();
     texture_init();
@@ -59,10 +63,9 @@ void tick(Game* self)
     calc_fps(&self->time);
 }
 
-void update(Game* self)
+void update(Game* self, float deltaTime)
 {
-
-    camera_process_input(self->window);
+    player_update(self->player, deltaTime, self->world, self->window);
     self->picked_block = picker_pick_block(self->world, self->camera, 10.0f);
 }
 
@@ -112,7 +115,6 @@ int start_game(Game* self)
     }
     shader_bind(self->shader_textured);
 
-    self->camera = camera_get_instance();
     glm_vec3_copy((vec3){8.0f, 65.0f, 8.0f}, self->camera->cameraPos);
 
     char atlas_path[_MAX_PATH];
@@ -125,8 +127,12 @@ int start_game(Game* self)
     Shader* crosshair_shader = shader_create(SHADER_DIR"crosshair", shader_separate);
 
     while (!glfwWindowShouldClose(self->window) && glfwGetKey(self->window, GLFW_KEY_ESCAPE ) != GLFW_PRESS) {
+        double currentTime = glfwGetTime();
+        float deltaTime = currentTime - self->time.previousTime;
+        self->time.previousTime = currentTime;
+
         tick(self);
-        update(self);
+        update(self, deltaTime);
         
         render(self);
 

@@ -30,18 +30,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        world_place_block(game->world, hit.x, hit.y, hit.z, hit.face, BLOCK_STONE);
+        world_place_block(game->world, hit.x, hit.y, hit.z, hit.face, BLOCK_STONE, game->camera->cameraPos, game->player->width, game->player->height);
     }
 
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    (void)window;
-    camera_mouse_input(xpos, ypos);
+    Game* game = (Game*)glfwGetWindowUserPointer(window);
+
+    camera_mouse_input(game->camera, xpos, ypos);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
-    (void)window;
-    camera_scroll_input(xoffset, yoffset);
+    Game* game = (Game*)glfwGetWindowUserPointer(window);
+
+    camera_scroll_input(game->camera, xoffset, yoffset);
 }

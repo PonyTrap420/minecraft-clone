@@ -166,28 +166,48 @@ void world_destroy_block(World* world, int x, int y, int z) {
     chunk_prepare(chunk);
 }
 
-void world_place_block(World* world, int x, int y, int z, int face, int block_type) {
+void world_place_block(World* world, int x, int y, int z, int face, int block_type, vec3 camera_pos, float player_width, float player_height) {
+    int target_x = x, target_y = y, target_z = z;
+    
     switch (face) {
-        case FACE_FRONT:  z -= 1; break; 
-        case FACE_BACK:   z += 1; break; 
-        case FACE_LEFT:   x -= 1; break; 
-        case FACE_RIGHT:  x += 1; break; 
-        case FACE_BOTTOM: y -= 1; break; 
-        case FACE_TOP:    y += 1; break; 
+        case FACE_FRONT:  target_z -= 1; break; 
+        case FACE_BACK:   target_z += 1; break; 
+        case FACE_LEFT:   target_x -= 1; break; 
+        case FACE_RIGHT:  target_x += 1; break; 
+        case FACE_BOTTOM: target_y -= 1; break; 
+        case FACE_TOP:    target_y += 1; break; 
         default: return;
     }
 
+    vec3 player_feet = {
+        camera_pos[0],
+        camera_pos[1] - player_height,
+        camera_pos[2]
+    };
+
+    float block_size = 1.0f;
+    float half_width = player_width / 2.0f;
+    
+    if (player_feet[0] - half_width < target_x + block_size && 
+        player_feet[0] + half_width > target_x &&
+        player_feet[1] < target_y + block_size && 
+        player_feet[1] + player_height > target_y &&
+        player_feet[2] - half_width < target_z + block_size && 
+        player_feet[2] + half_width > target_z) {
+        return;
+    }
+
     int chunk_x, chunk_z, local_x, local_z;
-    if (!world_resolve_coordinates(x, y, z, &chunk_x, &chunk_z, &local_x, &local_z))
+    if (!world_resolve_coordinates(target_x, target_y, target_z, &chunk_x, &chunk_z, &local_x, &local_z))
         return;
 
-    if (y < 0 || y >= CHUNK_SIZE_Y || block_type == BLOCK_AIR)
+    if (target_y < 0 || target_y >= CHUNK_SIZE_Y || block_type == BLOCK_AIR)
         return;
 
     Chunk* chunk = world_get_chunk(world, chunk_x, chunk_z);
     if (!chunk) return;
 
-    chunk->blocks[local_x][y][local_z] = block_type;
+    chunk->blocks[local_x][target_y][local_z] = block_type;
     chunk_generate_mesh(chunk);
     chunk_prepare(chunk);
 }
@@ -214,4 +234,27 @@ void world_render(World* world, Shader* shader)
             }
         }
     }
+}
+
+float world_get_ground_height_at(World* world, float x, float z) {
+    int wx = (int)floorf(x);
+    int wz = (int)floorf(z);
+
+    int chunk_x, chunk_z, local_x, local_z;
+    if (!world_resolve_coordinates(wx, 0, wz, &chunk_x, &chunk_z, &local_x, &local_z))
+        return 0.0f; // default ground level if out of bounds
+
+    // Get the chunk
+    Chunk* chunk = world_get_chunk(world, chunk_x, chunk_z);
+    if (!chunk) return 0.0f;
+
+    // Scan downward from top of chunk to find the first solid block
+    for (int y = CHUNK_SIZE_Y - 1; y >= 0; --y) {
+        int block = chunk->blocks[local_x][y][local_z];
+        if (block != 0) { // assuming 0 = air
+            return (float)(y + 1); // ground is top of this block
+        }
+    }
+
+    return 0.0f; // nothing solid found
 }

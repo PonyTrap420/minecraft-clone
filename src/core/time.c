@@ -5,6 +5,7 @@
 Time init_time(){
     Time time = {
         glfwGetTime(),
+        0,
         0
     };
     return time;
@@ -13,9 +14,9 @@ Time init_time(){
 void calc_fps(Time* time){
     double currentTime = glfwGetTime();
 
-    if (currentTime - time->previousTime>= 1.0) {
+    if (currentTime - time->previousTimeFPS>= 1.0) {
         printf("FPS: %d\n", time->frameCount);
         time->frameCount = 0;
-        time->previousTime = currentTime;
+        time->previousTimeFPS = currentTime;
     }
 }

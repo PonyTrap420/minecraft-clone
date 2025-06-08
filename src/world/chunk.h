@@ -13,6 +13,9 @@ typedef struct World World;
 #define CHUNK_SIZE_Y 256
 #define CHUNK_SIZE_Z 16
 
+#define CHUNK_WIDTH CHUNK_SIZE_X
+#define CHUNK_HEIGHT CHUNK_SIZE_Y
+
 #define MAX_VERTS (CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z * 36)
 typedef struct {
     World* world;

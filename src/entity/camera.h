@@ -8,7 +8,7 @@
 #define PITCH 0.0f
 #define SPEED 5.0f
 #define SENSITIVITY 0.1f
-#define ZOOM 45.0f
+#define ZOOM 70.0f
 
 typedef struct {
     vec3 cameraPos;
@@ -22,8 +22,8 @@ typedef struct {
 
 Camera* camera_get_instance(void);
 
-void camera_process_input(GLFWwindow* window);
-void camera_mouse_input(double xpos, double ypos);
-void camera_scroll_input(double xoffset, double yoffset);
+void camera_process_input(Camera* camera, GLFWwindow* window);
+void camera_mouse_input(Camera* camera, double xpos, double ypos);
+void camera_scroll_input(Camera* camera, double xoffset, double yoffset);
 
 void camera_get_view_matrix(Camera* camera, mat4 dest);

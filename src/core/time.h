@@ -1,4 +1,5 @@
 typedef struct Time{
+    double previousTimeFPS;
     double previousTime;
     unsigned int frameCount;
 }Time;
