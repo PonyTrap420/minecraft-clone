@@ -64,13 +64,10 @@ void chunk_generate_mesh(Chunk* chunk) {
                     if (is_face_visible(chunk->world, chunk, x, y, z, dx, dy, dz)) {
                            BlockType block = chunk->blocks[x][y][z];
 
-                            // calculate float offset in the buffer (5 floats per vertex)
-                            float* ptr = chunk->vertex_data + chunk->vertex_count * 5;
+                            float* ptr = chunk->vertex_data + chunk->vertex_count * 6;
 
-                            // add_face returns number of vertices * 5 floats written
                             int floats_written = add_face(ptr, x, y, z, i, block);
 
-                            // increment vertex_count by number of vertices added (floats_written/5)
                             chunk->vertex_count += floats_written;
 
                     }
@@ -82,11 +79,12 @@ void chunk_generate_mesh(Chunk* chunk) {
 
 void chunk_prepare(Chunk* chunk){
     chunk->vao = vao_init();
-    VBO vbo = vbo_init(chunk->vertex_data, chunk->vertex_count * 5 * sizeof(float));
+    VBO vbo = vbo_init(chunk->vertex_data, chunk->vertex_count * 6 * sizeof(float));
 
     VertexBufferLayout* layout = vbl_init();
     vbl_push_float(layout, 3);
     vbl_push_float(layout, 2);
+    vbl_push_float(layout, 1);
 
     vao_addbuffer(chunk->vao, vbo, layout);
 }
@@ -102,10 +100,9 @@ int is_face_visible(World* world, Chunk* chunk, int x, int y, int z, int dx, int
     int nz = z + dz;
 
     if (ny < 0 || ny >= CHUNK_SIZE_Y) {
-        return 1; // outside vertical bounds → visible
+        return 1;
     }
 
-    // Check if neighboring block is outside the current chunk
     if (nx < 0 || nx >= CHUNK_SIZE_X || nz < 0 || nz >= CHUNK_SIZE_Z) {
         int neighbor_chunk_x = chunk->chunk_x + (nx < 0 ? -1 : (nx >= CHUNK_SIZE_X ? 1 : 0));
         int neighbor_chunk_z = chunk->chunk_z + (nz < 0 ? -1 : (nz >= CHUNK_SIZE_Z ? 1 : 0));
@@ -131,9 +128,7 @@ void chunk_free(Chunk* chunk) {
         chunk->vertex_data = NULL;
     }
 
-    // Delete VAO and associated buffers
     vao_destroy(chunk->vao);
 
-    // Free the chunk itself
     free(chunk);
 }

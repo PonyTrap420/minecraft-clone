@@ -110,32 +110,34 @@ int add_face(float* out, int x, int y, int z, int face, BlockType block_type) {
         {uv_top_left[0],           uv_top_left[1]}             // top-left
     };
 
-    // We write 6 vertices (two triangles), each vertex 5 floats: 3 pos + 2 uv
+    // We write 6 vertices (two triangles), each vertex 6 floats: 3 pos + 2 uv + 1 face index
     // Triangle 1: vertices idx[0], idx[1], idx[2]
     for (int i = 0; i < 3; ++i) {
         int vi = i; // vertex index in this triangle
         vec3* pos = &world_vertices[idx[vi]];
         vec2* uv = &uvs[vi];
 
-        out[i*5 + 0] = (*pos)[0];
-        out[i*5 + 1] = (*pos)[1];
-        out[i*5 + 2] = (*pos)[2];
-        out[i*5 + 3] = (*uv)[0];
-        out[i*5 + 4] = 1.0f-(*uv)[1];
+        out[i*6 + 0] = (*pos)[0];
+        out[i*6 + 1] = (*pos)[1];
+        out[i*6 + 2] = (*pos)[2];
+        out[i*6 + 3] = (*uv)[0];
+        out[i*6 + 4] = 1.0f-(*uv)[1];
+        out[i*6 + 5] = (float)face; // new: face index
     }
 
-   // Triangle 2: vertices idx[0], idx[2], idx[3]
+    // Triangle 2: vertices idx[0], idx[2], idx[3]
     int second_tri_indices[3] = {0, 2, 3};
     for (int i = 0; i < 3; ++i) {
         int vi = second_tri_indices[i];
         vec3* pos = &world_vertices[idx[vi]];
         vec2* uv = &uvs[vi];
 
-        out[(3+i)*5 + 0] = (*pos)[0];
-        out[(3+i)*5 + 1] = (*pos)[1];
-        out[(3+i)*5 + 2] = (*pos)[2];
-        out[(3+i)*5 + 3] = (*uv)[0];
-        out[(3+i)*5 + 4] = 1.0f - (*uv)[1];
+        out[(3+i)*6 + 0] = (*pos)[0];
+        out[(3+i)*6 + 1] = (*pos)[1];
+        out[(3+i)*6 + 2] = (*pos)[2];
+        out[(3+i)*6 + 3] = (*uv)[0];
+        out[(3+i)*6 + 4] = 1.0f - (*uv)[1];
+        out[(3+i)*6 + 5] = (float)face; // new: face index
     }
 
     return 6; // 6 vertices added

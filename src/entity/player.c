@@ -220,7 +220,7 @@ void player_update(Player* player, float deltaTime, World* world, GLFWwindow* wi
     bool isMoving = forward || backward || left || right;
     player->isMoving = isMoving;
     
-    if (isMoving && player->onGround && !player->isFlying) {
+    if (isMoving && player->onGround && !player->isFlying && !ctrlPressed) {
         player->cameraBobTime += deltaTime * 12.0f;
         
         vec3 camRight;
